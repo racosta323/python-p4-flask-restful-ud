@@ -6,6 +6,8 @@ from flask_restful import Api, Resource
 
 from models import db, Newsletter
 
+import ipdb
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///newsletters.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -79,9 +81,39 @@ class NewsletterByID(Resource):
         )
 
         return response
+    
+    def patch(self, id):
+
+        record = Newsletter.query.get(id)
+
+        #look through attr of request
+        for attr in request.form:
+            setattr(record,attr,request.form[attr])
+
+        db.session.add(record)
+        db.session.commit()
+        
+        response = make_response(record.to_dict(), 200)
+        return response
+    
+    def delete(self,id):
+        record = Newsletter.query.get(id)
+
+        db.session.delete(record)
+        db.session.commit()
+
+        body = {
+            "message": 'Record Deleted'
+        }
+
+        response = make_response(body, 200)
+        return response
 
 api.add_resource(NewsletterByID, '/newsletters/<int:id>')
 
 
+
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
+    ipdb.set_trace()
+
